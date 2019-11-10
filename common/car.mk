@@ -62,8 +62,17 @@ PRODUCT_COPY_FILES += \
 
 DEVICE_MANIFEST_FILE := device/generic/car/common/manifest.xml
 
+# Whitelisted packages per user type
+PRODUCT_COPY_FILES += \
+  device/generic/car/common/preinstalled-packages-product-car-emulator.xml:product/etc/sysconfig/preinstalled-packages-product-car-emulator.xml
+
 # Car emulator specific sepolicy
 BOARD_SEPOLICY_DIRS += \
     device/generic/car/common/sepolicy
+
+# Number of pre-created users
+PRODUCT_SYSTEM_DEFAULT_PROPERTIES := \
+    android.car.number_pre_created_users=1 \
+    android.car.number_pre_created_guests=1
 
 $(call inherit-product, packages/services/Car/car_product/build/car.mk)
