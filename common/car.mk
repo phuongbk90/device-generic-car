@@ -19,8 +19,9 @@
 PRODUCT_PACKAGES += \
     android.hardware.automotive.vehicle@2.0-service \
     android.hardware.automotive.audiocontrol@1.0-service \
-    android.hardware.bluetooth@1.1-service.sim \
-    android.hardware.bluetooth.audio@2.0-impl \
+
+# vehicle Interface Manifest
+DEVICE_MANIFEST_FILE += hardware/interfaces/automotive/vehicle/2.0/manifest.vehicle.xml
 
 # Emulator configuration
 PRODUCT_COPY_FILES += \
@@ -64,11 +65,5 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     device/generic/goldfish/data/etc/apns-conf.xml:system/etc/apns-conf.xml \
     device/sample/etc/old-apns-conf.xml:system/etc/old-apns-conf.xml
-
-DEVICE_MANIFEST_FILE := device/generic/car/common/manifest.xml
-
-# Car emulator specific sepolicy
-BOARD_SEPOLICY_DIRS += \
-    device/generic/car/common/sepolicy
 
 $(call inherit-product, packages/services/Car/car_product/build/car.mk)
