@@ -13,6 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Enable Setup Wizard. This overrides the setting in emulator_vendor.mk
+PRODUCT_SYSTEM_EXT_PROPERTIES += \
+    ro.setupwizard.mode=OPTIONAL
+
 $(call inherit-product, device/generic/car/common/car.mk)
 # This overrides device/generic/car/common/car.mk
 $(call inherit-product, device/generic/car/emulator/audio/car_emulator_audio.mk)
