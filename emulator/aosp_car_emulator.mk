@@ -20,4 +20,3 @@ PRODUCT_SYSTEM_EXT_PROPERTIES += \
 $(call inherit-product, device/generic/car/common/car.mk)
 # This overrides device/generic/car/common/car.mk
 $(call inherit-product, device/generic/car/emulator/audio/car_emulator_audio.mk)
-
