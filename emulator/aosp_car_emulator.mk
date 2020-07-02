@@ -15,7 +15,7 @@
 
 # Enable Setup Wizard. This overrides the setting in emulator_vendor.mk
 PRODUCT_SYSTEM_EXT_PROPERTIES += \
-    ro.setupwizard.mode=OPTIONAL
+    ro.setupwizard.mode?=OPTIONAL
 
 $(call inherit-product, device/generic/car/common/car.mk)
 # This overrides device/generic/car/common/car.mk
