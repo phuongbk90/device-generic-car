@@ -93,5 +93,4 @@ hw.sensors.proximity = no
 hw.trackBall = no
 runtime.network.latency = none
 runtime.network.speed = full
-vm.heapSize = 80
 EOT
