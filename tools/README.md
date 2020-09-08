@@ -1,7 +1,14 @@
 # AAOS car AVD tools
-This folder contains scripts to help you sharing and running car AVD images.
+This folder contains scripts to help you to build, run and share car AVD images. We intentailly keep this on the AOSP main trunk for vairous branches from Android 10.
 
-## Build an Car AVD image
+## Download the tools
+- To clone the tool only: git_clone_projects.sh
+- Link it into an Android source tree, e.g.:
+```
+ln -s $HOME/avd/car/tools $ANDROID_BUILD_TOP/device/generic/car/tools
+```
+
+## Build an AVD image
 This builds AOSP car x86_64 userdebug AVD.
 ```
 . device/generic/car/tools/mk_car_avd.sh
