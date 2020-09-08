@@ -13,7 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-$(call inherit-product, device/generic/car/common/car.mk)
+PRODUCT_PACKAGE_OVERLAYS := device/generic/car/common/overlay
+
+$(call inherit-product, device/generic/car/emulator/aosp_car_emulator.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_x86_64.mk)
 $(call inherit-product, device/generic/car/emulator/audio/car_emulator_audio.mk)
 
@@ -29,6 +31,7 @@ PRODUCT_SDK_ADDON_COPY_MODULES := \
 
 DEVICE_PACKAGE_OVERLAYS += device/generic/car/car_x86_64/overlay
 
+EMULATOR_VENDOR_NO_SOUND := true
 PRODUCT_NAME := car_x86_64
 PRODUCT_DEVICE := generic_x86_64
 PRODUCT_BRAND := Google
