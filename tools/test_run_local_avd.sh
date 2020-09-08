@@ -35,4 +35,4 @@ ln -s $AVD_IMAGE_DIR "$WORKDIR/$ABI"
 WORKDIR=$WORKDIR \
     ABI=$ABI \
     AVD_IMAGE_DIR=$AVD_IMAGE_DIR \
-    $MY_DIR/run_local_avd.sh
+    $MY_DIR/run_local_avd.sh -verbose -show-kernel -debug init $@
