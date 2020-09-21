@@ -54,7 +54,7 @@ else
 fi
 
 echo Ramdisk, prebuilt
-cp $ANDROID_PRODUCT_OUT/ramdisk.img $OUT_DIR/ramdisk.img
+cp $ANDROID_PRODUCT_OUT/ramdisk-qemu.img $OUT_DIR/ramdisk.img
 
 echo Encryptionkey, prebuilt
 cp $ANDROID_PRODUCT_OUT/encryptionkey.img $OUT_DIR/encryptionkey.img
