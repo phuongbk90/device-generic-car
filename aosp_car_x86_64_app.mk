@@ -1,5 +1,4 @@
-#!/bin/bash
-
+#
 # Copyright (C) 2020 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,25 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo Setup a clean local AVD with the Img in $HOME/Downloads/x86_64 and run
+$(call inherit-product, device/generic/car/common/car.mk)
+$(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_64bitonly_x86_64.mk)
 
-MY_NAME=$0
-MY_FILENAME=${MY_NAME##*/}  # = "test_run_local_avd.sh"
-MY_DIR=${MY_NAME%/$MY_FILENAME}  # = "/path/to"
-echo running from $MY_DIR
-
-WORKDIR="$HOME/workdir"
-echo Setup a clean $WORKDIR
-rm -rf $WORKDIR
-mkdir $WORKDIR
-
-ABI="x86_64"
-AVD_IMAGE_DIR="$HOME/Downloads/$ABI"
-
-echo link $AVD_IMAGE_DIR to "$WORKDIR/$ABI"
-ln -s $AVD_IMAGE_DIR "$WORKDIR/$ABI"
-
-WORKDIR=$WORKDIR \
-    ABI=$ABI \
-    AVD_IMAGE_DIR=$AVD_IMAGE_DIR \
-    $MY_DIR/run_local_avd.sh -verbose -show-kernel -debug init $@
+# This build configuration supports 64-bit apps only
+PRODUCT_NAME := aosp_car_x86_64_app
+PRODUCT_DEVICE := generic_64bitonly_x86_64
+PRODUCT_BRAND := Android
+PRODUCT_MODEL := Car on x86_64 64-bit app only emulator
