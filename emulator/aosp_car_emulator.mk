@@ -17,6 +17,10 @@
 PRODUCT_SYSTEM_EXT_PROPERTIES += \
     ro.setupwizard.mode?=OPTIONAL
 
+ifeq (,$(ENABLE_REAR_VIEW_CAMERA_SAMPLE))
+ENABLE_REAR_VIEW_CAMERA_SAMPLE:=true
+endif
+
 $(call inherit-product, device/generic/car/common/car.mk)
 # This overrides device/generic/car/common/car.mk
 $(call inherit-product, device/generic/car/emulator/audio/car_emulator_audio.mk)
