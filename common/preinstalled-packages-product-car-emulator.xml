@@ -82,6 +82,11 @@
         <install-in user-type="SYSTEM" />
     </install-in-user-type>
 
+    <!-- Required for RearViewCamera -->
+    <install-in-user-type package="com.google.android.car.rvc">
+        <install-in user-type="FULL" />
+        <install-in user-type="SYSTEM" />
+    </install-in-user-type>
 <!--
   Apps that do need to run on SYSTEM and evaluated by package owner.
   Here the apps will have FULL only.
@@ -141,6 +146,15 @@
         <install-in user-type="FULL" />
     </install-in-user-type>
     <install-in-user-type package="com.android.car.retaildemo">
+        <install-in user-type="FULL" />
+    </install-in-user-type>
+    <install-in-user-type package="com.android.car.rotary">
+        <install-in user-type="FULL" />
+    </install-in-user-type>
+    <install-in-user-type package="com.android.car.rotaryime">
+        <install-in user-type="FULL" />
+    </install-in-user-type>
+    <install-in-user-type package="com.android.car.rotaryplayground">
         <install-in user-type="FULL" />
     </install-in-user-type>
     <install-in-user-type package="com.android.car.voicecontrol">
