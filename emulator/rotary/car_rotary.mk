@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2017 The Android Open Source Project
+# Copyright (C) 2020 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,14 +12,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+##
+# Car Rotary Controller for Android Automotive.
 
-PRODUCT_PACKAGE_OVERLAYS := device/generic/car/common/overlay
+PRODUCT_PACKAGES += \
+    CarRotaryController \
+    RotaryPlayground \
+    RotaryIME \
 
-$(call inherit-product, device/generic/car/emulator/aosp_car_emulator.mk)
-$(call inherit-product, $(SRC_TARGET_DIR)/product/aosp_x86.mk)
-
-EMULATOR_VENDOR_NO_SOUND := true
-PRODUCT_NAME := aosp_car_x86
-PRODUCT_DEVICE := generic_car_x86
-PRODUCT_BRAND := Android
-PRODUCT_MODEL := Car on x86 emulator
+DEVICE_PACKAGE_OVERLAYS += device/generic/car/emulator/rotary/overlay

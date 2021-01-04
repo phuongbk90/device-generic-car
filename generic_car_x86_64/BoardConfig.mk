@@ -1,5 +1,4 @@
-#!/bin/bash
-
+#
 # Copyright (C) 2020 The Android Open Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,26 +12,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
 
-echo Setup a clean local AVD with the Img in $HOME/Downloads/x86_64 and run
+# This is a wrapper board for AAOS 64bit only emulators
+# Use generic_64bitonly_x86_64 BoardConfig as base
+include build/make/target/board/generic_64bitonly_x86_64/BoardConfig.mk
 
-MY_NAME=$0
-MY_FILENAME=${MY_NAME##*/}  # = "test_run_local_avd.sh"
-MY_DIR=${MY_NAME%/$MY_FILENAME}  # = "/path/to"
-echo running from $MY_DIR
-
-WORKDIR="$HOME/workdir"
-echo Setup a clean $WORKDIR
-rm -rf $WORKDIR
-mkdir $WORKDIR
-
-ABI="x86_64"
-AVD_IMAGE_DIR="$HOME/Downloads/$ABI"
-
-echo link $AVD_IMAGE_DIR to "$WORKDIR/$ABI"
-ln -s $AVD_IMAGE_DIR "$WORKDIR/$ABI"
-
-WORKDIR=$WORKDIR \
-    ABI=$ABI \
-    AVD_IMAGE_DIR=$AVD_IMAGE_DIR \
-    $MY_DIR/run_local_avd.sh -verbose -show-kernel -debug init $@
+# Override BOARD_SUPER_PARTITION_SIZE to inclease the mounted system partition.
+BOARD_SUPER_PARTITION_SIZE := 5856296960

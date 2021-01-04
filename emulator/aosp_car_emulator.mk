@@ -17,12 +17,21 @@
 PRODUCT_SYSTEM_EXT_PROPERTIES += \
     ro.setupwizard.mode?=OPTIONAL
 
+ifeq (,$(ENABLE_REAR_VIEW_CAMERA_SAMPLE))
+ENABLE_REAR_VIEW_CAMERA_SAMPLE:=true
+endif
+
 $(call inherit-product, device/generic/car/common/car.mk)
 # This overrides device/generic/car/common/car.mk
 $(call inherit-product, device/generic/car/emulator/audio/car_emulator_audio.mk)
+$(call inherit-product, device/generic/car/emulator/rotary/car_rotary.mk)
 
 ifeq (true,$(BUILD_EMULATOR_CLUSTER_DISPLAY))
 PRODUCT_PRODUCT_PROPERTIES += \
     hwservicemanager.external.displays=1,400,600,120,0 \
     persist.service.bootanim.displays=8140900251843329
 endif
+
+# Define the host tools and libs that are parts of the SDK.
+$(call inherit-product, sdk/build/product_sdk.mk)
+$(call inherit-product, development/build/product_sdk.mk)
