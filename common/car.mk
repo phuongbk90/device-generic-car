@@ -19,6 +19,7 @@
 PRODUCT_PACKAGES += \
     android.hardware.automotive.vehicle@2.0-service \
     android.hardware.automotive.audiocontrol@2.0-service \
+    android.frameworks.automotive.display@1.0-service \
 
 # Emulator configuration
 PRODUCT_COPY_FILES += \
@@ -87,4 +88,12 @@ PRODUCT_SYSTEM_DEFAULT_PROPERTIES := \
 # Additional selinux policy
 BOARD_SEPOLICY_DIRS += device/generic/car/common/sepolicy
 
+#
+# Special settings for GSI releasing
+#
+ifneq (,$(filter aosp_car_x86_64 aosp_car_arm64,$(TARGET_PRODUCT)))
+$(call inherit-product, $(SRC_TARGET_DIR)/product/gsi_release.mk)
+endif
+
+$(call inherit-product, packages/services/Car/evs/sepolicy/evs.mk)
 $(call inherit-product, packages/services/Car/car_product/build/car.mk)
