@@ -20,26 +20,29 @@
  */
 
 #define LOG_TAG "audio_hw_generic_caremu"
+// #define LOG_NDEBUG 0
+
+#include "audio_hw.h"
+#include "include/audio_hw_control.h"
 
 #include <assert.h>
+#include <cutils/hashmap.h>
+#include <cutils/properties.h>
+#include <cutils/str_parms.h>
+#include <dlfcn.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <hardware/hardware.h>
 #include <inttypes.h>
+#include <log/log.h>
 #include <math.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/time.h>
-#include <dlfcn.h>
-#include <fcntl.h>
+#include <system/audio.h>
 #include <unistd.h>
 
-#include <log/log.h>
-#include <cutils/properties.h>
-#include <cutils/str_parms.h>
-
-#include <hardware/hardware.h>
-#include <system/audio.h>
-
-#include "audio_hw.h"
 #include "ext_pcm.h"
 
 #define PCM_CARD 0
@@ -61,6 +64,9 @@
 // Max tone frequency to auto assign, don't want to generate too high of a pitch
 #define MAX_TONE_FREQUENCY 500
 
+// -14dB to match the volume curve in PlaybackActivityMonitor
+#define DUCKING_MULTIPLIER 0.2
+
 #define _bool_str(x) ((x)?"true":"false")
 
 static const char * const PROP_KEY_SIMULATE_MULTI_ZONE_AUDIO = "ro.aae.simulateMultiZoneAudio";
@@ -73,9 +79,51 @@ static const char * const AAE_PARAMETER_KEY_FOR_SELECTED_ZONE = "com.android.car
 static const char * const TONE_ADDRESS_KEYWORD = "_tone_";
 static const char * const AUDIO_ZONE_KEYWORD = "_audio_zone_";
 
+static pthread_mutex_t adev_lock = PTHREAD_MUTEX_INITIALIZER;
+
 #define SIZE_OF_PARSE_BUFFER 32
 
 static int adev_get_mic_mute(const struct audio_hw_device *dev, bool *state);
+
+static struct generic_stream_out * get_audio_device(const char *address, const char *caller) {
+    pthread_mutex_lock(&adev_lock);
+    if(device_handle == 0) {
+        ALOGE("%s no device handle available", caller);
+        pthread_mutex_unlock(&adev_lock);
+        return NULL;
+    }
+
+    struct generic_stream_out *out = hashmapGet(device_handle->out_bus_stream_map, address);
+    pthread_mutex_unlock(&adev_lock);
+
+    return out;
+}
+
+void set_device_address_is_ducked(const char *device_address, bool is_ducked) {
+    struct generic_stream_out *out = get_audio_device(device_address, __func__);
+
+    if (!out) {
+        ALOGW("%s no device found with address %s", __func__, device_address);
+        return;
+    }
+
+    pthread_mutex_lock(&out->lock);
+    out->is_ducked = is_ducked;
+    pthread_mutex_unlock(&out->lock);
+}
+
+void set_device_address_is_muted(const char *device_address, bool is_muted){
+    struct generic_stream_out *out = get_audio_device(device_address, __func__);
+
+    if (!out) {
+        ALOGW("%s no device found with address %s", __func__, device_address);
+        return;
+    }
+
+    pthread_mutex_lock(&out->lock);
+    out->is_muted = is_muted;
+    pthread_mutex_unlock(&out->lock);
+}
 
 static struct pcm_config pcm_config_out = {
     .channels = 2,
@@ -112,7 +160,6 @@ static struct pcm_config pcm_config_in = {
     .stop_threshold = INT_MAX,
 };
 
-static pthread_mutex_t adev_init_lock = PTHREAD_MUTEX_INITIALIZER;
 static unsigned int audio_device_ref_count = 0;
 
 static bool is_zone_selected_to_play(struct audio_hw_device *dev, int zone_id) {
@@ -170,6 +217,8 @@ static int out_dump(const struct audio_stream *stream, int fd) {
                 "\t\tdevice: %08x\n"
                 "\t\tamplitude ratio: %f\n"
                 "\t\tenabled channels: %d\n"
+                "\t\tis ducked: %s\n"
+                "\t\tis muted: %s\n"
                 "\t\taudio dev: %p\n\n",
                 out->bus_address,
                 out_get_sample_rate(stream),
@@ -179,6 +228,8 @@ static int out_dump(const struct audio_stream *stream, int fd) {
                 out->device,
                 out->amplitude_ratio,
                 out->enabled_channels,
+                _bool_str(out->is_ducked),
+                _bool_str(out->is_muted),
                 out->dev);
     pthread_mutex_unlock(&out->lock);
     return 0;
@@ -398,6 +449,10 @@ static void out_apply_gain(struct generic_stream_out *out, const void *buffer, s
             int16_buffer[i] = 0;
         } else {
             float multiplied = int16_buffer[i] * out->amplitude_ratio;
+            if (out->is_ducked) {
+                multiplied = multiplied * DUCKING_MULTIPLIER;
+            }
+
             if (multiplied > INT16_MAX) int16_buffer[i] = INT16_MAX;
             else if (multiplied < INT16_MIN) int16_buffer[i] = INT16_MIN;
             else int16_buffer[i] = (int16_t)multiplied;
@@ -430,8 +485,8 @@ static ssize_t out_write(struct audio_stream_out *stream, const void *buffer, si
     }
 
     size_t frames_written = frames;
-    if (out->dev->master_mute) {
-        ALOGV("%s: ignored due to master mute", __func__);
+    if (out->dev->master_mute || out->is_muted) {
+        ALOGV("%s: ignored due to mute", __func__);
     } else {
         out_apply_gain(out, buffer, bytes);
         frames_written = audio_vbuffer_write(&out->buffer, buffer, frames);
@@ -1091,6 +1146,11 @@ static int adev_open_output_stream(struct audio_hw_device *dev,
     }
 
     out->enabled_channels = BOTH_CHANNELS;
+    // For targets where output streams are closed regularly, currently ducked/muted addresses
+    // should be tracked so that the address of new streams can be checked to determine the
+    // default state
+    out->is_ducked = 0;
+    out->is_muted = 0;
     if (address) {
         out->bus_address = calloc(strlen(address) + 1, sizeof(char));
         strncpy(out->bus_address, address, strlen(address));
@@ -1369,6 +1429,8 @@ static int adev_set_audio_port_config(struct audio_hw_device *dev,
         int minDb = out->gain_stage.min_value / 100;
         int maxDb = out->gain_stage.max_value / 100;
         // curve: 10^((minDb + (maxDb - minDb) * gainIndex / totalSteps) / 20)
+        // 2x10, where 10 comes from the log 10 conversion from power ratios,
+        // which are the square (2) of amplitude
         out->amplitude_ratio = pow(10,
                 (minDb + (maxDb - minDb) * (gainIndex / (float)totalSteps)) / 20);
         pthread_mutex_unlock(&out->lock);
@@ -1423,7 +1485,7 @@ static int adev_close(hw_device_t *dev) {
     if (!adev)
         return 0;
 
-    pthread_mutex_lock(&adev_init_lock);
+    pthread_mutex_lock(&adev_lock);
 
     if (audio_device_ref_count == 0) {
         ALOGE("adev_close called when ref_count 0");
@@ -1441,11 +1503,13 @@ static int adev_close(hw_device_t *dev) {
         if (adev->in_bus_tone_frequency_map) {
             hashmapFree(adev->in_bus_tone_frequency_map);
         }
+
+        device_handle = 0;
         free(adev);
     }
 
 error:
-    pthread_mutex_unlock(&adev_init_lock);
+    pthread_mutex_unlock(&adev_lock);
     return ret;
 }
 
@@ -1477,7 +1541,7 @@ static int adev_open(const hw_module_t *module,
     if (strcmp(name, AUDIO_HARDWARE_INTERFACE) != 0)
         return -EINVAL;
 
-    pthread_mutex_lock(&adev_init_lock);
+    pthread_mutex_lock(&adev_lock);
     if (audio_device_ref_count != 0) {
         *device = &adev->device.common;
         audio_device_ref_count++;
@@ -1557,10 +1621,12 @@ static int adev_open(const hw_module_t *module,
 
     adev->last_zone_selected_to_play = DEFAULT_ZONE_TO_LEFT_SPEAKER;
 
+    device_handle = adev;
+
     audio_device_ref_count++;
 
 unlock:
-    pthread_mutex_unlock(&adev_init_lock);
+    pthread_mutex_unlock(&adev_lock);
     return 0;
 }
 
