@@ -14,6 +14,7 @@
 # limitations under the License.
 
 PRODUCT_ENFORCE_ARTIFACT_PATH_REQUIREMENTS := relaxed
+PRODUCT_PACKAGES += android.frameworks.automotive.display@1.0-service
 
 PRODUCT_ARTIFACT_PATH_REQUIREMENT_ALLOWED_LIST += \
     root/init.bootstat.rc \
@@ -28,6 +29,7 @@ PRODUCT_ARTIFACT_PATH_REQUIREMENT_ALLOWED_LIST += \
     system/app/RotaryIME/RotaryIME.apk \
     system/app/RotaryIME/oat/arm64/RotaryIME.odex \
     system/app/RotaryIME/oat/arm64/RotaryIME.vdex \
+    system/app/CarRotaryImeRRO/CarRotaryImeRRO.apk \
     system/app/RotaryPlayground/RotaryPlayground.apk \
     system/app/SampleCustomInputService/SampleCustomInputService.apk \
     system/app/SampleRearViewCamera/SampleRearViewCamera.apk \
@@ -139,6 +141,11 @@ PRODUCT_ARTIFACT_PATH_REQUIREMENT_ALLOWED_LIST += \
     system/lib64/android.frameworks.automotive.telemetry-V1-cpp.so \
     system/lib64/android.automotive.telemetry.internal-ndk_platform.so \
     system/lib64/android.frameworks.automotive.telemetry-V1-ndk_platform.so \
+    system/etc/automotive/watchdog/system_resource_overuse_configuration.xml \
+    system/etc/automotive/watchdog/third_party_resource_overuse_configuration.xml \
+    system/bin/android.frameworks.automotive.display@1.0-service \
+    system/etc/init/android.frameworks.automotive.display@1.0-service.rc \
+    system/etc/vintf/manifest/manifest_android.frameworks.automotive.display@1.0.xml \
 
 PRODUCT_ARTIFACT_PATH_REQUIREMENT_ALLOWED_LIST += %.odex %.vdex %.art
 
